@@ -1,12 +1,17 @@
-import './App.css'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+
 
 function App() {
   return (
-    <div className="container mt-5">
-      <h1 className="text-center text-primary">Olá, Bootstrap com React e Vite! 💙</h1>
-      <button className="btn btn-success mt-3">Clique aqui</button>
-    </div>
+    <Router>
+      <div className="d-flex">
+        <Sidebar />
+      </div>
+    </Router>
   )
 }
+
 
 export default App
