@@ -9,25 +9,107 @@ const Occurrences = () => {
   const itemsPerPage = 6;
 
   const ocorrenciasMock = [
-    { grau: "Alto", nome: "Maria Silva Santos", cpfCnpj: "123.456.789-00", email: "maria.santos@email.com", tipoFraude: "Compra suspeita" },
-    { grau: "Alto", nome: "TechCorp Ltda", cpfCnpj: "12.345.678/0001-90", email: "contato@techcorp.com", tipoFraude: "Phishing" },
-    { grau: "Médio", nome: "Carlos Eduardo Lima", cpfCnpj: "987.654.321-11", email: "carlos.lima@email.com", tipoFraude: "Ligação suspeita" },
-    { grau: "Médio", nome: "Fernanda Rodrigues", cpfCnpj: "456.789.123-22", email: "fernanda.rodrigues@email.com", tipoFraude: "SMS" },
-    { grau: "Baixo", nome: "Inovação S.A.", cpfCnpj: "98.765.432/0001-10", email: "financeiro@inovacao.com", tipoFraude: "Phishing" },
-    { grau: "Baixo", nome: "TechData Ltda", cpfCnpj: "33.456.789/0001-45", email: "suporte@techdata.com", tipoFraude: "Compra suspeita" },
-    { grau: "Alto", nome: "Ana Costa", cpfCnpj: "321.654.987-00", email: "ana.costa@email.com", tipoFraude: "Phishing" },
-    { grau: "Médio", nome: "Global Systems", cpfCnpj: "78.654.321/0001-22", email: "contato@globalsys.com", tipoFraude: "SMS" },
-    { grau: "Baixo", nome: "Roberto Mendes", cpfCnpj: "654.987.321-00", email: "roberto.mendes@email.com", tipoFraude: "Ligação suspeita" },
-    { grau: "Alto", nome: "SecureTech", cpfCnpj: "22.111.222/0001-33", email: "contato@securetech.com", tipoFraude: "Phishing" },
+    {
+      grau: "Alto",
+      nome: "Maria Silva Santos",
+      cpfCnpj: "123.456.789-00",
+      email: "maria.santos@email.com",
+      tipoFraude: "Compra suspeita",
+      dataNascimento: "1990-05-15",
+    },
+     {
+      grau: "Alto",
+      nome: "Maria Silva Santos",
+      cpfCnpj: "123.456.789-00",
+      email: "maria.santos@email.com",
+      tipoFraude: "Compra suspeita",
+      dataNascimento: "2004-05-15",
+    },
+    {
+      grau: "Alto",
+      nome: "TechCorp Ltda",
+      cpfCnpj: "12.345.678/0001-90",
+      email: "contato@techcorp.com",
+      tipoFraude: "Phishing",
+      dataNascimento: "1985-03-22",
+    },
+    {
+      grau: "Médio",
+      nome: "Carlos Eduardo Lima",
+      cpfCnpj: "987.654.321-11",
+      email: "carlos.lima@email.com",
+      tipoFraude: "Ligação suspeita",
+      dataNascimento: "1992-11-30",
+    },
+    {
+      grau: "Médio",
+      nome: "Fernanda Rodrigues",
+      cpfCnpj: "456.789.123-22",
+      email: "fernanda.rodrigues@email.com",
+      tipoFraude: "SMS",
+      dataNascimento: "1988-07-14",
+    },
+    {
+      grau: "Baixo",
+      nome: "Inovação S.A.",
+      cpfCnpj: "98.765.432/0001-10",
+      email: "financeiro@inovacao.com",
+      tipoFraude: "Phishing",
+      dataNascimento: "1975-01-01",
+    },
+    {
+      grau: "Baixo",
+      nome: "TechData Ltda",
+      cpfCnpj: "33.456.789/0001-45",
+      email: "suporte@techdata.com",
+      tipoFraude: "Compra suspeita",
+      dataNascimento: "1980-09-09",
+    },
+    {
+      grau: "Alto",
+      nome: "Ana Costa",
+      cpfCnpj: "321.654.987-00",
+      email: "ana.costa@email.com",
+      tipoFraude: "Phishing",
+      dataNascimento: "1995-02-20",
+    },
+    {
+      grau: "Médio",
+      nome: "Global Systems",
+      cpfCnpj: "78.654.321/0001-22",
+      email: "contato@globalsys.com",
+      tipoFraude: "SMS",
+      dataNascimento: "1990-11-11",
+    },
+    {
+      grau: "Baixo",
+      nome: "Roberto Mendes",
+      cpfCnpj: "654.987.321-00",
+      email: "roberto.mendes@email.com",
+      tipoFraude: "Ligação suspeita",
+      dataNascimento: "1982-03-30",
+    },
+    {
+      grau: "Alto",
+      nome: "SecureTech",
+      cpfCnpj: "22.111.222/0001-33",
+      email: "contato@securetech.com",
+      tipoFraude: "Phishing",
+      dataNascimento: "1993-08-08",
+    },
   ];
 
-  const totalPages = Math.ceil(ocorrenciasMock.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentItems = ocorrenciasMock.slice(startIndex, startIndex + itemsPerPage)
+  const totalPages = Math.ceil(ocorrenciasMock.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = ocorrenciasMock.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  const goToPage = (page) => setCurrentPage(page)
-  const goToPrevious = () => setCurrentPage((prev) => Math.max(prev - 1, 1))
-  const goToNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  const goToPage = (page) => setCurrentPage(page);
+  const goToPrevious = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const goToNext = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
     <div>
@@ -73,7 +155,9 @@ const Occurrences = () => {
             <th style={{ color: "#6B7280", textAlign: "center" }}>Nome</th>
             <th style={{ color: "#6B7280", textAlign: "center" }}>CPF/CNPJ</th>
             <th style={{ color: "#6B7280", textAlign: "center" }}>Email</th>
-            <th style={{ color: "#6B7280", textAlign: "center" }}>Tipo Fraude</th>
+            <th style={{ color: "#6B7280", textAlign: "center" }}>
+              Tipo Fraude
+            </th>
           </tr>
         </thead>
         <tbody className="text-center">

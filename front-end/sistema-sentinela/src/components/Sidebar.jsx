@@ -6,8 +6,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const Sidebar = () => {
   return (
     <div
-      className="d-flex flex-column vh-100 text-white"
-      style={{ width: "240px", backgroundColor: "#1E293B" }}
+      className="d-flex flex-column text-white"
+      style={{ width: "240px", backgroundColor: "#1E293B"}}
     >
       <div className="d-flex flex-row gap-2 justify-content-center p-4">
         <svg
