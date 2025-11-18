@@ -109,8 +109,8 @@ class Ocorrencia(models.Model):
                 self.numero_ocorrencia = ultima_ocorrencia.numero_ocorrencia + 1
             else:
                 self.numero_ocorrencia = 1
-            
-            super().save(*args, **kwargs)
+        
+        super().save(*args, **kwargs)
 
 
 
