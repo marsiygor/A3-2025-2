@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Table, Button } from "react-bootstrap";
 import NewOccurrenceModal from "../components/NewOccurrenceModal";
+import { Toast, ToastContainer } from "react-bootstrap";
 
 const Occurrences = () => {
   const [ocorrencias, setOcorrencias] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showToast, setShowToast] = useState(false);
 
   const itemsPerPage = 6;
 
@@ -138,7 +140,24 @@ const Occurrences = () => {
         </div>
       </div>
 
-      <NewOccurrenceModal show={showModal} onHide={() => setShowModal(false)} />
+      <NewOccurrenceModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        onSuccess={() => setShowToast(true)}
+      />
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg="success"
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={3000}
+          autohide
+        >
+          <Toast.Body className="text-white">
+            Ocorrência registrada com sucesso!
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };
