@@ -7,13 +7,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const PieChartComponent = ({ title }) => {
-  const data = [
-    { name: "Phishing", value: 45 },
-    { name: "Compra Suspeita", value: 45 },
-    { name: "SMS", value: 10 },
-    { name: "Ligação Suspeita", value: 10 },
-  ];
+const PieChartComponent = ({ title, data = [] }) => {
 
   const COLORS = ["#111827", "#6B7280", "#38B4A6", "#1E40AF"];
 

@@ -1,2 +1,8 @@
 .venv
 __pycache__
+./__pycache__
+
+back-end/sistema-sentinela/app/__pycache__/admin.cpython-313.pyc
+back-end/sistema-sentinela/app/__pycache__/models.cpython-313.pyc
+back-end/sistema-sentinela/config/__pycache__/settings.cpython-313.pyc
+back-end/sistema-sentinela/config/__pycache__/urls.cpython-313.pyc
