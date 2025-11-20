@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 
 // Constantes do formulário
@@ -19,7 +19,7 @@ const SEVERITY_LEVELS = ["Baixo", "Médio", "Alto"];
 
 const maskCpfCnpj = (value) => {
   const digitsOnly = value.replace(/\D/g, "");
-  
+
   if (digitsOnly.length <= 11) {
     return digitsOnly
       .replace(/^(\d{3})(\d)/, "$1.$2")
@@ -27,7 +27,7 @@ const maskCpfCnpj = (value) => {
       .replace(/\.(\d{3})(\d)/, ".$1-$2")
       .slice(0, 14);
   }
-  
+
   return digitsOnly
     .replace(/^(\d{2})(\d)/, "$1.$2")
     .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
@@ -52,6 +52,17 @@ const validators = {
 const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [touchedFields, setTouchedFields] = useState({});
+  const [unidades, setUnidades] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      fetch('/api/unidadedenegocio/')
+        .then(res => res.json())
+        .then(data => setUnidades(data))
+        .catch(err => console.error("Erro ao buscar unidades:", err));
+    }
+  }, [show]);
 
   // Validação do formulário (memoizada para performance)
   const isFormValid = useMemo(() => {
@@ -74,8 +85,8 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
       telefone: maskTelefone,
     };
 
-    const maskedValue = fieldMasks[fieldName] 
-      ? fieldMasks[fieldName](fieldValue) 
+    const maskedValue = fieldMasks[fieldName]
+      ? fieldMasks[fieldName](fieldValue)
       : fieldValue;
 
     setFormData((prev) => ({
@@ -93,13 +104,65 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
     setTouchedFields({});
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!isFormValid) return;
+    setIsSubmitting(true);
 
-    onSuccess(formData);
-    onHide();
-    resetForm();
-  }, [isFormValid, formData, onSuccess, onHide, resetForm]);
+    try {
+      // Preparar payload
+      // Mapear campos extras para a descrição
+      const descricaoCompleta = `
+${formData.descricao}
+
+--- Dados do Contato ---
+Nome: ${formData.nome}
+Email: ${formData.email}
+Telefone: ${formData.telefone}
+Data Nascimento: ${formData.dataNascimento}
+Tipo Fraude: ${formData.tipoFraude}
+        `.trim();
+
+      const payload = {
+        cpf_cnpj_relacionado: formData.cpfCnpj,
+        unidade_de_negocio: unidades.length > 0 ? unidades[0].guid : null, // Pega a primeira unidade disponível
+        assunto: formData.assunto,
+        grau_da_ocorrencia: formData.grau.toUpperCase(), // Backend espera ALTO, MEDIO, BAIXO
+        descricao: descricaoCompleta,
+        // Outros campos opcionais ou default
+      };
+
+      if (!payload.unidade_de_negocio) {
+        alert("Nenhuma Unidade de Negócio encontrada para vincular a ocorrência.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const response = await fetch('/api/ocorrencias/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        onSuccess(data);
+        onHide();
+        resetForm();
+      } else {
+        const errorData = await response.json();
+        console.error("Erro ao salvar:", errorData);
+        alert("Erro ao salvar ocorrência. Verifique o console.");
+      }
+
+    } catch (error) {
+      console.error("Erro de rede:", error);
+      alert("Erro de conexão ao salvar ocorrência.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isFormValid, formData, onSuccess, onHide, resetForm, unidades]);
 
   const handleModalHide = useCallback(() => {
     resetForm();
@@ -136,7 +199,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
 
       <Modal.Body>
         <div className="d-flex align-items-center gap-2 mb-3">
-         <i class="bi bi-person-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
+          <i className="bi bi-person-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
           <h6 className="mb-0" style={{ color: "#0A2342" }}>Dados do Contato Envolvido</h6>
         </div>
         <Form>
@@ -203,7 +266,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
           </Row>
 
           <div className="d-flex align-items-center gap-2 mb-3 mt-4">
-           <i class="bi bi-exclamation-triangle-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
+            <i className="bi bi-exclamation-triangle-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
             <h6 className="mb-0" style={{ color: "#0A2342" }}>Detalhes do Golpe / Fraude</h6>
           </div>
 
@@ -294,10 +357,10 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
             backgroundColor: isFormValid ? "#38B4A6" : "#9cd8d1",
             border: "none",
           }}
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSubmitting}
           onClick={handleSubmit}
         >
-          Registrar Ocorrência
+          {isSubmitting ? "Salvando..." : "Registrar Ocorrência"}
         </Button>
       </Modal.Footer>
     </Modal>
