@@ -95,6 +95,7 @@ O projeto segue uma arquitetura **Client-Server** desacoplada:
 ## 👥 Feito por
 
 -   **Ygor Fernandes Marsi** - 822156379
+-   **Maria Eduarda Pereira** - 822145642
 -   **Lucas Santos Carvalho** - 82211118
 -   **Joao Vitor Nonato** - 822163044
 -   **Ana Carolina Amaral Silva** - 822138023
