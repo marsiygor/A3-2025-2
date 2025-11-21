@@ -29,7 +29,7 @@ class UnidadedeNegocioViewSet(viewsets.ModelViewSet):
 class OcorrenciaViewSet(viewsets.ModelViewSet):
     queryset = Ocorrencia.objects.all().order_by('-data_criacao')
     serializer_class = OcorrenciaSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
         # numero_ocorrencia é gerenciado pelo modelo; apenas salvar

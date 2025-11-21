@@ -123,7 +123,7 @@ Tipo Fraude: ${formData.tipoFraude}
         `.trim();
 
       const payload = {
-        cpf_cnpj_relacionado: formData.cpfCnpj,
+        cpf_cnpj_relacionado: formData.cpfCnpj.replace(/\D/g, ""),
         unidade_de_negocio: unidades.length > 0 ? unidades[0].guid : null, // Pega a primeira unidade disponível
         assunto: formData.assunto,
         grau_da_ocorrencia: formData.grau.toUpperCase(), // Backend espera ALTO, MEDIO, BAIXO

@@ -12,7 +12,7 @@ const Sidebar = () => {
       style={{ width: "240px", backgroundColor: "#1E293B" }}
     >
       <div className="d-flex flex-row gap-2 justify-content-center p-4">
-       <i class="bi bi-shield-shaded" style={{ color: "#38B4A6", display: "flex", fontSize: "25px" }}></i>
+        <i className="bi bi-shield-shaded" style={{ color: "#38B4A6", display: "flex", fontSize: "25px" }}></i>
         <h4>Sentinela</h4>
       </div>
       <Nav className="flex-column gap-2">
@@ -31,7 +31,7 @@ const Sidebar = () => {
               padding: "8px 12px",
             })}
           >
-            <i class="bi bi-graph-up" style={{ fontSize: "20px" }}></i>
+            <i className="bi bi-graph-up" style={{ fontSize: "20px" }}></i>
             Dashboard
           </NavLink>
         </Nav.Item>
@@ -46,7 +46,7 @@ const Sidebar = () => {
               padding: "8px 12px",
             })}
           >
-            <i class="bi bi-exclamation-triangle" style={{fontSize: "20px" }}></i>
+            <i className="bi bi-exclamation-triangle" style={{ fontSize: "20px" }}></i>
             Novas Ocorrências
           </NavLink>
         </Nav.Item>
