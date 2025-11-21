@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Table, Button } from "react-bootstrap";
 import NewOccurrenceModal from "../components/NewOccurrenceModal";
 import { Toast, ToastContainer } from "react-bootstrap";
@@ -11,12 +11,21 @@ const Occurrences = () => {
 
   const itemsPerPage = 6;
 
-  React.useEffect(() => {
+  const fetchOcorrencias = useCallback(() => {
     fetch('/api/ocorrencias/')
       .then(response => response.json())
       .then(data => setOcorrencias(data))
       .catch(error => console.error('Error fetching occurrences:', error));
   }, []);
+
+  useEffect(() => {
+    fetchOcorrencias();
+  }, [fetchOcorrencias]);
+
+  const handleSuccess = () => {
+    setShowToast(true);
+    fetchOcorrencias();
+  };
 
   const totalPages = Math.ceil(ocorrencias.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -70,13 +79,11 @@ const Occurrences = () => {
       >
         <thead>
           <tr>
-            <th style={{ color: "#6B7280", textAlign: "center" }}>Grau</th>
-            <th style={{ color: "#6B7280", textAlign: "center" }}>Nome</th>
+            <th style={{ color: "#6B7280", textAlign: "center" }}>ID</th>
+            <th style={{ color: "#6B7280", textAlign: "center" }}>Assunto</th>
             <th style={{ color: "#6B7280", textAlign: "center" }}>CPF/CNPJ</th>
-            <th style={{ color: "#6B7280", textAlign: "center" }}>Email</th>
-            <th style={{ color: "#6B7280", textAlign: "center" }}>
-              Tipo Fraude
-            </th>
+            <th style={{ color: "#6B7280", textAlign: "center" }}>Grau</th>
+            <th style={{ color: "#6B7280", textAlign: "center" }}>Data</th>
           </tr>
         </thead>
         <tbody className="text-center">
@@ -89,11 +96,11 @@ const Occurrences = () => {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               }}
             >
-              <td>{o.grau}</td>
-              <td>{o.nome}</td>
-              <td>{o.cpfCnpj}</td>
-              <td>{o.email}</td>
-              <td>{o.tipoFraude}</td>
+              <td>{o.numero_ocorrencia}</td>
+              <td>{o.assunto}</td>
+              <td>{o.cpf_cnpj_relacionado}</td>
+              <td>{o.grau_da_ocorrencia}</td>
+              <td>{new Date(o.data_criacao).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
@@ -103,7 +110,7 @@ const Occurrences = () => {
         <span>
           Mostrando {startIndex + 1} a{" "}
           {Math.min(startIndex + itemsPerPage, ocorrencias.length)} de{" "}
-          {ocorrencias.length} contatos
+          {ocorrencias.length} ocorrências
         </span>
 
         <div>
@@ -143,7 +150,7 @@ const Occurrences = () => {
       <NewOccurrenceModal
         show={showModal}
         onHide={() => setShowModal(false)}
-        onSuccess={() => setShowToast(true)}
+        onSuccess={handleSuccess}
       />
       <ToastContainer position="top-end" className="p-3">
         <Toast
