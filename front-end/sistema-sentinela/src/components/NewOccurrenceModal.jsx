@@ -1,59 +1,24 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-
-// Constantes do formulário
-const INITIAL_FORM_STATE = {
-  nome: "",
-  cpfCnpj: "",
-  dataNascimento: "",
-  telefone: "",
-  email: "",
-  assunto: "",
-  tipoFraude: "",
-  grau: "",
-  descricao: "",
-};
-
-const FRAUD_TYPES = ["Phishing", "Compra suspeita", "SMS", "Ligação suspeita"];
-const SEVERITY_LEVELS = ["Baixo", "Médio", "Alto"];
-
-const maskCpfCnpj = (value) => {
-  const digitsOnly = value.replace(/\D/g, "");
-
-  if (digitsOnly.length <= 11) {
-    return digitsOnly
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1-$2")
-      .slice(0, 14);
-  }
-
-  return digitsOnly
-    .replace(/^(\d{2})(\d)/, "$1.$2")
-    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d)/, ".$1/$2")
-    .replace(/(\d{4})(\d)/, "$1-$2")
-    .slice(0, 18);
-};
-
-const maskTelefone = (value) =>
-  value
-    .replace(/\D/g, "")
-    .replace(/^(\d{2})(\d)/, "($1) $2")
-    .replace(/(\d{5})(\d)/, "$1-$2")
-    .slice(0, 15);
-
-const validators = {
-  email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-  cpfCnpj: (value) => value.length === 14 || value.length === 18,
-  telefone: (value) => value.length === 15,
-};
+import InputMask from "react-input-mask";
 
 const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
-  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
-  const [touchedFields, setTouchedFields] = useState({});
+  const [step, setStep] = useState(1);
   const [unidades, setUnidades] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    nome: "",
+    cpfCnpj: "",
+    email: "",
+    telefone: "",
+    assunto: "",
+    tipoFraude: "",
+    dataNascimento: "",
+    descricao: "",
+    grau: "BAIXO",
+    arquivos: [],
+  });
 
   useEffect(() => {
     if (show) {
@@ -64,71 +29,45 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
     }
   }, [show]);
 
-  // Validação do formulário (memoizada para performance)
-  const isFormValid = useMemo(() => {
-    return (
-      formData.nome.trim() &&
-      formData.dataNascimento &&
-      formData.assunto.trim() &&
-      formData.tipoFraude &&
-      formData.grau &&
-      formData.descricao.trim() &&
-      validators.email(formData.email) &&
-      validators.cpfCnpj(formData.cpfCnpj) &&
-      validators.telefone(formData.telefone)
-    );
-  }, [formData]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleChange = useCallback((fieldName, fieldValue) => {
-    const fieldMasks = {
-      cpfCnpj: maskCpfCnpj,
-      telefone: maskTelefone,
-    };
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData((prev) => ({ ...prev, arquivos: files }));
+  };
 
-    const maskedValue = fieldMasks[fieldName]
-      ? fieldMasks[fieldName](fieldValue)
-      : fieldValue;
+  const handleNext = () => setStep((prev) => prev + 1);
+  const handleBack = () => setStep((prev) => prev - 1);
 
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: maskedValue,
-    }));
-  }, []);
-
-  const handleBlur = useCallback((fieldName) => {
-    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
-  }, []);
-
-  const resetForm = useCallback(() => {
-    setFormData(INITIAL_FORM_STATE);
-    setTouchedFields({});
-  }, []);
-
-  const handleSubmit = useCallback(async () => {
-    if (!isFormValid) return;
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-
     try {
-      // Preparar payload
-      // Mapear campos extras para a descrição
-      const descricaoCompleta = `
-${formData.descricao}
+      // Validação básica
+      if (!formData.assunto || !formData.descricao) {
+        alert("Por favor, preencha os campos obrigatórios.");
+        setIsSubmitting(false);
+        return;
+      }
 
---- Dados do Contato ---
-Nome: ${formData.nome}
-Email: ${formData.email}
-Telefone: ${formData.telefone}
-Data Nascimento: ${formData.dataNascimento}
-Tipo Fraude: ${formData.tipoFraude}
-        `.trim();
+      if (!formData.tipoFraude) {
+        alert("Por favor, selecione o tipo de fraude.");
+        setIsSubmitting(false);
+        return;
+      }
 
+      // Payload para o backend
       const payload = {
+        unidade_de_negocio: unidades.length > 0 ? unidades[0].guid : null,
         cpf_cnpj_relacionado: formData.cpfCnpj.replace(/\D/g, ""),
-        unidade_de_negocio: unidades.length > 0 ? unidades[0].guid : null, // Pega a primeira unidade disponível
         assunto: formData.assunto,
-        grau_da_ocorrencia: formData.grau.toUpperCase(), // Backend espera ALTO, MEDIO, BAIXO
-        descricao: descricaoCompleta,
-        // Outros campos opcionais ou default
+        tipo_fraude: formData.tipoFraude,
+        data_nascimento: formData.dataNascimento || null,
+        grau_da_ocorrencia: formData.grau,
+        descricao: `Nome: ${formData.nome}\nEmail: ${formData.email}\nTelefone: ${formData.telefone}\n\n${formData.descricao}`,
+        fraudante_utilizou_ia: false
       };
 
       if (!payload.unidade_de_negocio) {
@@ -142,226 +81,313 @@ Tipo Fraude: ${formData.tipoFraude}
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        const data = await response.json();
-        onSuccess(data);
+        if (onSuccess) onSuccess();
         onHide();
-        resetForm();
+        // Reset form
+        setFormData({
+          nome: "",
+          cpfCnpj: "",
+          email: "",
+          telefone: "",
+          assunto: "",
+          tipoFraude: "",
+          dataNascimento: "",
+          descricao: "",
+          grau: "BAIXO",
+          arquivos: [],
+        });
+        setStep(1);
       } else {
         const errorData = await response.json();
         console.error("Erro ao salvar:", errorData);
         alert("Erro ao salvar ocorrência. Verifique o console.");
       }
-
     } catch (error) {
-      console.error("Erro de rede:", error);
+      console.error("Erro na requisição:", error);
       alert("Erro de conexão ao salvar ocorrência.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [isFormValid, formData, onSuccess, onHide, resetForm, unidades]);
-
-  const handleModalHide = useCallback(() => {
-    resetForm();
-    onHide();
-  }, [resetForm, onHide]);
-
-  const getFieldError = useCallback((fieldName) => {
-    if (!touchedFields[fieldName]) return false;
-
-    switch (fieldName) {
-      case "email":
-        return !validators.email(formData.email);
-      case "cpfCnpj":
-        return !validators.cpfCnpj(formData.cpfCnpj);
-      case "telefone":
-        return !validators.telefone(formData.telefone);
-      case "nome":
-      case "assunto":
-      case "descricao":
-        return !formData[fieldName].trim();
-      default:
-        return !formData[fieldName];
-    }
-  }, [touchedFields, formData]);
+  };
 
   return (
-    <Modal show={show} onHide={handleModalHide} centered size="lg">
-      <Modal.Header closeButton>
-        <div className="d-flex flex-column">
-          <Modal.Title>Nova Ocorrência</Modal.Title>
-          <small className="text-muted">Cadastre uma nova ocorrência</small>
-        </div>
+    <Modal show={show} onHide={onHide} centered size="lg">
+      <Modal.Header closeButton style={{ borderBottom: "none" }}>
+        <Modal.Title style={{ color: "#0A2342", fontWeight: "bold" }}>
+          Nova Ocorrência
+        </Modal.Title>
       </Modal.Header>
-
       <Modal.Body>
-        <div className="d-flex align-items-center gap-2 mb-3">
-          <i className="bi bi-person-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
-          <h6 className="mb-0" style={{ color: "#0A2342" }}>Dados do Contato Envolvido</h6>
+        {/* Stepper visual simples */}
+        <div className="d-flex justify-content-between mb-4 position-relative">
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "0",
+              right: "0",
+              height: "2px",
+              backgroundColor: "#E5E7EB",
+              zIndex: 0,
+            }}
+          />
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className="d-flex justify-content-center align-items-center"
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                backgroundColor: step >= s ? "#38B4A6" : "#fff",
+                border: step >= s ? "none" : "2px solid #E5E7EB",
+                color: step >= s ? "#fff" : "#6B7280",
+                fontWeight: "bold",
+                zIndex: 1,
+              }}
+            >
+              {s}
+            </div>
+          ))}
         </div>
+
         <Form>
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Nome Completo *</Form.Label>
+          {step === 1 && (
+            <>
+              <h5 className="mb-3" style={{ color: "#0A2342" }}>
+                Dados do Denunciante
+              </h5>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="formNome">
+                    <Form.Label>Nome Completo</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Seu nome"
+                      name="nome"
+                      value={formData.nome}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group controlId="formCpfCnpj">
+                    <Form.Label>CPF/CNPJ</Form.Label>
+                    <InputMask
+                      mask="999.999.999-99"
+                      value={formData.cpfCnpj}
+                      onChange={handleChange}
+                    >
+                      {(inputProps) => (
+                        <Form.Control
+                          {...inputProps}
+                          type="text"
+                          placeholder="000.000.000-00"
+                          name="cpfCnpj"
+                        />
+                      )}
+                    </InputMask>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="formEmail">
+                    <Form.Label>Email</Form.Label>
+                    <Form.Control
+                      type="email"
+                      placeholder="exemplo@email.com"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group controlId="formTelefone">
+                    <Form.Label>Telefone</Form.Label>
+                    <InputMask
+                      mask="(99) 99999-9999"
+                      value={formData.telefone}
+                      onChange={handleChange}
+                    >
+                      {(inputProps) => (
+                        <Form.Control
+                          {...inputProps}
+                          type="text"
+                          placeholder="(00) 00000-0000"
+                          name="telefone"
+                        />
+                      )}
+                    </InputMask>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="formDataNascimento">
+                    <Form.Label>Data de Nascimento</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="dataNascimento"
+                      value={formData.dataNascimento}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h5 className="mb-3" style={{ color: "#0A2342" }}>
+                Detalhes da Ocorrência
+              </h5>
+              <Form.Group className="mb-3" controlId="formAssunto">
+                <Form.Label>Assunto</Form.Label>
                 <Form.Control
-                  value={formData.nome}
-                  onChange={(e) => handleChange("nome", e.target.value)}
-                  onBlur={() => handleBlur("nome")}
-                  isInvalid={getFieldError("nome")}
-                  placeholder="Nome completo"
+                  type="text"
+                  placeholder="Resumo do ocorrido"
+                  name="assunto"
+                  value={formData.assunto}
+                  onChange={handleChange}
                 />
               </Form.Group>
-            </Col>
 
-            <Col>
-              <Form.Group>
-                <Form.Label>CPF/CNPJ *</Form.Label>
-                <Form.Control
-                  value={formData.cpfCnpj}
-                  onChange={(e) => handleChange("cpfCnpj", e.target.value)}
-                  onBlur={() => handleBlur("cpfCnpj")}
-                  isInvalid={getFieldError("cpfCnpj")}
-                  placeholder="000.000.000-00"
-                />
-                <Form.Control.Feedback type="invalid">
-                  Digite um CPF/CNPJ válido.
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Data de Nascimento *</Form.Label>
-                <Form.Control
-                  type="date"
-                  value={formData.dataNascimento}
-                  onChange={(e) => handleChange("dataNascimento", e.target.value)}
-                  onBlur={() => handleBlur("dataNascimento")}
-                  isInvalid={getFieldError("dataNascimento")}
-                />
-              </Form.Group>
-            </Col>
-
-            <Col>
-              <Form.Group>
-                <Form.Label>Telefone *</Form.Label>
-                <Form.Control
-                  value={formData.telefone}
-                  onChange={(e) => handleChange("telefone", e.target.value)}
-                  onBlur={() => handleBlur("telefone")}
-                  isInvalid={getFieldError("telefone")}
-                  placeholder="(11) 99999-9999"
-                />
-                <Form.Control.Feedback type="invalid">
-                  Digite um telefone válido.
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <div className="d-flex align-items-center gap-2 mb-3 mt-4">
-            <i className="bi bi-exclamation-triangle-fill" style={{ color: "#38B4A6", fontSize: "20px" }}></i>
-            <h6 className="mb-0" style={{ color: "#0A2342" }}>Detalhes do Golpe / Fraude</h6>
-          </div>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Email *</Form.Label>
-            <Form.Control
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              onBlur={() => handleBlur("email")}
-              isInvalid={getFieldError("email")}
-              placeholder="email@exemplo.com"
-            />
-            <Form.Control.Feedback type="invalid">
-              Digite um e-mail válido.
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Assunto *</Form.Label>
-            <Form.Control
-              value={formData.assunto}
-              onChange={(e) => handleChange("assunto", e.target.value)}
-              onBlur={() => handleBlur("assunto")}
-              isInvalid={getFieldError("assunto")}
-              placeholder="Assunto da ocorrência"
-            />
-          </Form.Group>
-
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Tipo de Fraude *</Form.Label>
+              <Form.Group className="mb-3" controlId="formTipoFraude">
+                <Form.Label>Tipo de Fraude</Form.Label>
                 <Form.Select
+                  name="tipoFraude"
                   value={formData.tipoFraude}
-                  onChange={(e) => handleChange("tipoFraude", e.target.value)}
-                  onBlur={() => handleBlur("tipoFraude")}
-                  isInvalid={getFieldError("tipoFraude")}
+                  onChange={handleChange}
                 >
                   <option value="">Selecione...</option>
-                  {FRAUD_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
+                  <option value="Phishing">Phishing</option>
+                  <option value="Roubo de Identidade">Roubo de Identidade</option>
+                  <option value="Cartão Clonado">Cartão Clonado</option>
+                  <option value="Boleto Falso">Boleto Falso</option>
+                  <option value="Engenharia Social">Engenharia Social</option>
+                  <option value="Invasão de Conta">Invasão de Conta</option>
+                  <option value="Fraude no Pix">Fraude no Pix</option>
+                  <option value="Outros">Outros</option>
                 </Form.Select>
               </Form.Group>
-            </Col>
 
-            <Col>
-              <Form.Group>
-                <Form.Label>Grau da Ocorrência *</Form.Label>
-                <Form.Select
-                  value={formData.grau}
-                  onChange={(e) => handleChange("grau", e.target.value)}
-                  onBlur={() => handleBlur("grau")}
-                  isInvalid={getFieldError("grau")}
+              <Form.Group className="mb-3" controlId="formDescricao">
+                <Form.Label>Descrição Detalhada</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  placeholder="Descreva o que aconteceu..."
+                  name="descricao"
+                  value={formData.descricao}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formGrau">
+                <Form.Label>Grau de Severidade</Form.Label>
+                <div className="d-flex gap-3">
+                  {["BAIXO", "MEDIO", "ALTO"].map((g) => (
+                    <Form.Check
+                      key={g}
+                      type="radio"
+                      label={g.charAt(0) + g.slice(1).toLowerCase()}
+                      name="grau"
+                      value={g}
+                      checked={formData.grau === g}
+                      onChange={handleChange}
+                      id={`radio-${g}`}
+                    />
+                  ))}
+                </div>
+              </Form.Group>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <h5 className="mb-3" style={{ color: "#0A2342" }}>
+                Anexos (Opcional)
+              </h5>
+              <div
+                className="d-flex flex-column align-items-center justify-content-center p-5 border rounded"
+                style={{
+                  borderStyle: "dashed",
+                  borderColor: "#D1D5DB",
+                  backgroundColor: "#F9FAFB",
+                }}
+              >
+                <i
+                  className="bi bi-cloud-upload"
+                  style={{ fontSize: "2rem", color: "#9CA3AF" }}
+                ></i>
+                <p className="text-muted mt-2">
+                  Arraste arquivos ou clique para selecionar
+                </p>
+                <Form.Control
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
+                  id="fileInput"
+                />
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => document.getElementById("fileInput").click()}
                 >
-                  <option value="">Selecione...</option>
-                  {SEVERITY_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Form.Group>
-            <Form.Label>Descrição *</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              value={formData.descricao}
-              onChange={(e) => handleChange("descricao", e.target.value)}
-              onBlur={() => handleBlur("descricao")}
-              isInvalid={getFieldError("descricao")}
-              placeholder="Descreva detalhadamente a ocorrência..."
-            />
-          </Form.Group>
+                  Selecionar Arquivos
+                </Button>
+                {formData.arquivos.length > 0 && (
+                  <div className="mt-3 w-100">
+                    <h6>Arquivos selecionados:</h6>
+                    <ul className="list-unstyled">
+                      {formData.arquivos.map((file, index) => (
+                        <li key={index} className="text-sm text-muted">
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </Form>
       </Modal.Body>
-
-      <Modal.Footer>
-        <Button
-          style={{
-            backgroundColor: isFormValid ? "#38B4A6" : "#9cd8d1",
-            border: "none",
-          }}
-          disabled={!isFormValid || isSubmitting}
-          onClick={handleSubmit}
-        >
-          {isSubmitting ? "Salvando..." : "Registrar Ocorrência"}
-        </Button>
+      <Modal.Footer style={{ borderTop: "none" }}>
+        {step > 1 && (
+          <Button variant="light" onClick={handleBack}>
+            Voltar
+          </Button>
+        )}
+        {step < 3 ? (
+          <Button
+            onClick={handleNext}
+            style={{
+              backgroundColor: "#38B4A6",
+              border: "none",
+            }}
+          >
+            Próximo
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            style={{
+              backgroundColor: "#38B4A6",
+              border: "none",
+            }}
+          >
+            {isSubmitting ? "Enviando..." : "Enviar Denúncia"}
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

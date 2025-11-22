@@ -16,11 +16,24 @@ class UsuarioSerializer(serializers.ModelSerializer):
 class UnidadedeNegocioSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnidadedeNegocio
-        fields = ['guid', 'cnpj']
+        fields = ['guid', 'cnpj', 'nome', 'endereco']
 
 
 class OcorrenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ocorrencia
-        fields = ['guid', 'cpf_cnpj_relacionado', 'unidade_de_negocio', 'numero_ocorrencia', 'assunto', 'grau_da_ocorrencia', 'descricao', 'data_criacao', 'data_atualizacao']
-        read_only_fields = ['guid', 'numero_ocorrencia', 'data_criacao', 'data_atualizacao']
+        fields = [
+            'guid',
+            'unidade_de_negocio',
+            'cpf_cnpj_relacionado',
+            'assunto',
+            'tipo_fraude',
+            'data_nascimento',
+            'descricao',
+            'grau_da_ocorrencia',
+            'fraudante_utilizou_ia',
+            'numero_ocorrencia',
+            'data_criacao',
+            'data_atualizacao'
+        ]
+        read_only_fields = ['numero_ocorrencia', 'data_criacao', 'data_atualizacao']

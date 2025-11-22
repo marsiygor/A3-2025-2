@@ -22,10 +22,10 @@ function Dashboard() {
       (o) => o.grau_da_ocorrencia === "ALTO"
     ).length;
 
-    // faz contagem por tipo de fraude (assunto)
+    // faz contagem por tipo de fraude (agora usando o campo correto)
     const tiposFraudeCount = ocorrencias.reduce((acc, o) => {
-      const assunto = o.assunto || "Outros";
-      acc[assunto] = (acc[assunto] || 0) + 1;
+      const tipo = o.tipo_fraude || o.assunto || "Outros"; // Fallback para assunto se tipo_fraude for nulo
+      acc[tipo] = (acc[tipo] || 0) + 1;
       return acc;
     }, {});
 
@@ -56,16 +56,30 @@ function Dashboard() {
     const evolucaoLabels = Object.keys(evolucaoCount);
     const evolucaoData = Object.values(evolucaoCount);
 
-    // idades médias (Backend não tem data de nascimento no momento, usando mock ou removendo)
-    // Como o backend não retorna data de nascimento na Ocorrencia, vamos remover ou adaptar.
-    // Por enquanto, vamos deixar vazio para não quebrar, ou usar um dado fictício se necessário.
-    // O ideal seria pedir para o usuário adicionar esse dado no backend, mas vamos manter simples.
+    // Cálculo de faixas etárias
     const idadesPorFaixa = {
       "18-29": 0,
       "30-44": 0,
       "45-59": 0,
       "60+": 0,
     };
+
+    ocorrencias.forEach((o) => {
+      if (o.data_nascimento) {
+        const nascimento = new Date(o.data_nascimento);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - nascimento.getFullYear();
+        const m = hoje.getMonth() - nascimento.getMonth();
+        if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+          idade--;
+        }
+
+        if (idade >= 18 && idade <= 29) idadesPorFaixa["18-29"]++;
+        else if (idade >= 30 && idade <= 44) idadesPorFaixa["30-44"]++;
+        else if (idade >= 45 && idade <= 59) idadesPorFaixa["45-59"]++;
+        else if (idade >= 60) idadesPorFaixa["60+"]++;
+      }
+    });
 
     return {
       totalOcorrencias,
