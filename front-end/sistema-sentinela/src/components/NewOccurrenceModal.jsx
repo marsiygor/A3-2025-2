@@ -66,7 +66,10 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
         tipo_fraude: formData.tipoFraude,
         data_nascimento: formData.dataNascimento || null,
         grau_da_ocorrencia: formData.grau,
-        descricao: `Nome: ${formData.nome}\nEmail: ${formData.email}\nTelefone: ${formData.telefone}\n\n${formData.descricao}`,
+        descricao: formData.descricao,
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
         fraudante_utilizou_ia: false
       };
 

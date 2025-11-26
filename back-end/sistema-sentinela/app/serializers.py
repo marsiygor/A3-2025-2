@@ -24,6 +24,9 @@ class OcorrenciaSerializer(serializers.ModelSerializer):
         model = Ocorrencia
         fields = [
             'guid',
+            'nome',
+            'email',
+            'telefone',
             'unidade_de_negocio',
             'cpf_cnpj_relacionado',
             'assunto',

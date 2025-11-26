@@ -38,6 +38,9 @@ class Ocorrencia(models.Model):
     data_nascimento = models.DateField(null=True, blank=True)
     grau_da_ocorrencia = models.CharField(max_length=5, choices=GRAU_CHOICES)
     descricao = models.TextField(max_length=500)
+    nome = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    telefone = models.CharField(max_length=20, null=True, blank=True)
     fraudante_utilizou_ia = models.BooleanField(default=False)
 
     data_criacao = models.DateTimeField(auto_now_add=True)

@@ -18,7 +18,7 @@ const PieChartComponent = ({ title, data = [] }) => {
       </h6>
 
       <div style={{ width: "100%", height: 300 }}>
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
