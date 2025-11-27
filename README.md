@@ -101,3 +101,4 @@ O projeto segue uma arquitetura **Client-Server** desacoplada:
 -   **Ana Carolina Amaral Silva** - 822138023
 -   **Stephany Silva Dantas** - 822223694
 -   **Maria Victoria Bezerra da Silva** - 8222242697
+-   **Lucas Vasconcellos Ramos de Sousa** - 8222242709
