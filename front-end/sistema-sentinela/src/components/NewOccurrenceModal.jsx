@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import InputMask from "react-input-mask";
+import { useRef } from "react";
 
-const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+/>;
+
+const NewOccurrenceModal = ({ show, onHide, onSuccess, mode, data }) => {
   const [step, setStep] = useState(1);
   const [unidades, setUnidades] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isView = mode === "view";
+  const isEdit = mode === "edit";
+  const isCreate = mode === "create";
+  const disabled = isView;
+  const url = isEdit ? `/api/ocorrencias/${data.guid}/` : `/api/ocorrencias/`;
+  const method = isEdit ? "PUT" : "POST";
+  const dateInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -21,15 +35,52 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
   });
 
   useEffect(() => {
+    if (isCreate) {
+      setFormData({
+        nome: "",
+        cpfCnpj: "",
+        email: "",
+        telefone: "",
+        assunto: "",
+        tipoFraude: "",
+        dataNascimento: "",
+        descricao: "",
+        grau: "BAIXO",
+        arquivos: [],
+      });
+      setStep(1);
+      return;
+    }
+
+    if ((isView || isEdit) && data) {
+      setFormData({
+        nome: data.nome || "",
+        cpfCnpj: data.cpf_cnpj_relacionado || "",
+        email: data.email || "",
+        telefone: data.telefone || "",
+        assunto: data.assunto || "",
+        tipoFraude: data.tipo_fraude || "",
+        dataNascimento: data.data_nascimento || "",
+        descricao: data.descricao || "",
+        grau: data.grau_da_ocorrencia || "BAIXO",
+        arquivos: [],
+      });
+    }
+
+    setStep(1);
+  }, [show, mode, data]);
+
+  useEffect(() => {
     if (show) {
-      fetch('/api/unidadedenegocio/')
-        .then(res => res.json())
-        .then(data => setUnidades(data))
-        .catch(err => console.error("Erro ao buscar unidades:", err));
+      fetch("/api/unidadedenegocio/")
+        .then((res) => res.json())
+        .then((data) => setUnidades(data))
+        .catch((err) => console.error("Erro ao buscar unidades:", err));
     }
   }, [show]);
 
   const handleChange = (e) => {
+    if (disabled) return;
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -70,21 +121,21 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
         nome: formData.nome,
         email: formData.email,
         telefone: formData.telefone,
-        fraudante_utilizou_ia: false
+        fraudante_utilizou_ia: false,
       };
 
       if (!payload.unidade_de_negocio) {
-        alert("Nenhuma Unidade de Negócio encontrada para vincular a ocorrência.");
+        alert(
+          "Nenhuma Unidade de Negócio encontrada para vincular a ocorrência."
+        );
         setIsSubmitting(false);
         return;
       }
 
-      const response = await fetch('/api/ocorrencias/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -119,9 +170,11 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
-      <Modal.Header closeButton style={{ borderBottom: "none" }}>
-        <Modal.Title style={{ color: "#0A2342", fontWeight: "bold" }}>
-          Nova Ocorrência
+      <Modal.Header closeButton>
+        <Modal.Title style={{ color: "#0A2342" }}>
+          {isView && "Visualizar Ocorrência"}
+          {isEdit && "Editar Ocorrência"}
+          {isCreate && "Nova Ocorrência"}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -174,6 +227,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                       name="nome"
                       value={formData.nome}
                       onChange={handleChange}
+                      disabled={disabled}
                     />
                   </Form.Group>
                 </Col>
@@ -184,6 +238,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                       mask="999.999.999-99"
                       value={formData.cpfCnpj}
                       onChange={handleChange}
+                      disabled={disabled}
                     >
                       {(inputProps) => (
                         <Form.Control
@@ -191,6 +246,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                           type="text"
                           placeholder="000.000.000-00"
                           name="cpfCnpj"
+                          disabled={disabled}
                         />
                       )}
                     </InputMask>
@@ -207,6 +263,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
+                      disabled={disabled}
                     />
                   </Form.Group>
                 </Col>
@@ -217,6 +274,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                       mask="(99) 99999-9999"
                       value={formData.telefone}
                       onChange={handleChange}
+                      disabled={disabled}
                     >
                       {(inputProps) => (
                         <Form.Control
@@ -224,6 +282,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                           type="text"
                           placeholder="(00) 00000-0000"
                           name="telefone"
+                          disabled={disabled}
                         />
                       )}
                     </InputMask>
@@ -234,12 +293,30 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                 <Col md={6}>
                   <Form.Group controlId="formDataNascimento">
                     <Form.Label>Data de Nascimento</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="dataNascimento"
-                      value={formData.dataNascimento}
-                      onChange={handleChange}
-                    />
+
+                    <div style={{ position: "relative" }}>
+                      <Form.Control
+                        type="date"
+                        name="dataNascimento"
+                        value={formData.dataNascimento}
+                        onChange={handleChange}
+                        disabled={disabled}
+                        ref={dateInputRef}
+                      />
+
+                      <i
+                        className="bi bi-calendar-date"
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          cursor: "pointer",
+                          color: disabled ? "#b1b4baff" : "#646766ff",
+                        }}
+                        onClick={() => dateInputRef.current.showPicker()}
+                      ></i>
+                    </div>
                   </Form.Group>
                 </Col>
               </Row>
@@ -259,6 +336,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                   name="assunto"
                   value={formData.assunto}
                   onChange={handleChange}
+                  disabled={disabled}
                 />
               </Form.Group>
 
@@ -268,10 +346,13 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                   name="tipoFraude"
                   value={formData.tipoFraude}
                   onChange={handleChange}
+                  disabled={disabled}
                 >
                   <option value="">Selecione...</option>
                   <option value="Phishing">Phishing</option>
-                  <option value="Roubo de Identidade">Roubo de Identidade</option>
+                  <option value="Roubo de Identidade">
+                    Roubo de Identidade
+                  </option>
                   <option value="Cartão Clonado">Cartão Clonado</option>
                   <option value="Boleto Falso">Boleto Falso</option>
                   <option value="Engenharia Social">Engenharia Social</option>
@@ -290,6 +371,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                   name="descricao"
                   value={formData.descricao}
                   onChange={handleChange}
+                  disabled={disabled}
                 />
               </Form.Group>
               <Form.Group className="mb-3" controlId="formGrau">
@@ -305,6 +387,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                       checked={formData.grau === g}
                       onChange={handleChange}
                       id={`radio-${g}`}
+                      disabled={disabled}
                     />
                   ))}
                 </div>
@@ -343,6 +426,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => document.getElementById("fileInput").click()}
+                  disabled={disabled}
                 >
                   Selecionar Arquivos
                 </Button>
@@ -369,7 +453,24 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
             Voltar
           </Button>
         )}
-        {step < 3 ? (
+        {isView ? (
+          step < 3 ? (
+            <Button
+              variant="primary"
+              onClick={handleNext}
+              style={{ backgroundColor: "#38B4A6", border: "none" }}
+            >
+              Próximo
+            </Button>
+          ) : (
+            <Button
+              style={{ backgroundColor: "#38B4A6", border: "none" }}
+              onClick={onHide}
+            >
+              Fechar
+            </Button>
+          )
+        ) : step < 3 ? (
           <Button
             onClick={handleNext}
             style={{
@@ -388,7 +489,11 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess }) => {
               border: "none",
             }}
           >
-            {isSubmitting ? "Enviando..." : "Enviar Denúncia"}
+            {isSubmitting
+              ? "Enviando..."
+              : isEdit
+              ? "Salvar"
+              : "Enviar Denúncia"}
           </Button>
         )}
       </Modal.Footer>
