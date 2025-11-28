@@ -9,7 +9,7 @@ import {
 
 const PieChartComponent = ({ title, data = [] }) => {
 
-  const COLORS = ["#111827", "#6B7280", "#38B4A6", "#1E40AF", "#0EA5E9", "#86EFAC", "#FDE68A", "#F97316"];
+  const COLORS = ["#EF4444", "#6B7280", "#38B4A6", "#1E40AF", "#0EA5E9", "#FDE68A", "#A855F7", "#F97316"];
 
   return (
     <div className="card shadow-sm border-0 p-4">
