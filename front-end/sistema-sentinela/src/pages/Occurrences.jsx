@@ -98,9 +98,7 @@ const Occurrences = () => {
               <td>{o.cpf_cnpj_relacionado}</td>
               <td>{o.grau_da_ocorrencia}</td>
               <td>{new Date(o.data_criacao).toLocaleDateString()}</td>
-              {/* AÇÕES */}
               <td className="d-flex justify-content-center gap-3">
-                {/* Visualizar */}
                 <i
                   className="bi bi-eye"
                   style={{ cursor: "pointer", color: "#0A2342" }}
@@ -111,7 +109,6 @@ const Occurrences = () => {
                   }}
                 ></i>
 
-                {/* Editar */}
                 <i
                   className="bi bi-pencil"
                   style={{ cursor: "pointer", color: "#38B4A6" }}
@@ -122,7 +119,6 @@ const Occurrences = () => {
                   }}
                 ></i>
 
-                {/* Excluir */}
                 <i
                   className="bi bi-trash"
                   style={{ cursor: "pointer", color: "red" }}

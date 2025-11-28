@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import InputMask from "react-input-mask";
+import { useRef } from "react";
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+/>;
 
 const NewOccurrenceModal = ({ show, onHide, onSuccess, mode, data }) => {
   const [step, setStep] = useState(1);
@@ -13,6 +19,7 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess, mode, data }) => {
   const disabled = isView;
   const url = isEdit ? `/api/ocorrencias/${data.guid}/` : `/api/ocorrencias/`;
   const method = isEdit ? "PUT" : "POST";
+  const dateInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -286,13 +293,30 @@ const NewOccurrenceModal = ({ show, onHide, onSuccess, mode, data }) => {
                 <Col md={6}>
                   <Form.Group controlId="formDataNascimento">
                     <Form.Label>Data de Nascimento</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="dataNascimento"
-                      value={formData.dataNascimento}
-                      onChange={handleChange}
-                      disabled={disabled}
-                    />
+
+                    <div style={{ position: "relative" }}>
+                      <Form.Control
+                        type="date"
+                        name="dataNascimento"
+                        value={formData.dataNascimento}
+                        onChange={handleChange}
+                        disabled={disabled}
+                        ref={dateInputRef}
+                      />
+
+                      <i
+                        className="bi bi-calendar-date"
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          cursor: "pointer",
+                          color: disabled ? "#b1b4baff" : "#646766ff",
+                        }}
+                        onClick={() => dateInputRef.current.showPicker()}
+                      ></i>
+                    </div>
                   </Form.Group>
                 </Col>
               </Row>
